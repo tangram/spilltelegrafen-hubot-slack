@@ -1,6 +1,6 @@
 {
   "name": "spilltelegrafen-hubot-slack",
-  "version": "0.0.1",
+  "version": "0.0.5",
   "description": "Hubot Slack assistant for Spilltelegrafen",
   "author": "Eirik Krogstad <eirikkr@gmail.com>",
   "private": true,

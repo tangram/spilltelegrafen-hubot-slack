@@ -1,31 +1,145 @@
-let playersMax = 8
-let playersRemaining = playersMax
+// Description:
+//   Keep track of remaining players in Civilization V
+//
+// Commands:
+//   hubot ferdig - Tell hubot you are done with your turn
+//   hubot [spiller] er ferdig - Tell hubot [spiller] is done with their turn
+//   hubot ikke ferdig - Tell hubot you are not done with your turn after all
+//   hubot [spiller] er ikke ferdig - Tell hubot [spiller] is not done with their turn after all
+//   hubot ny tur - Tell hubot it's the next turn already
+//   hubot status - Hubot will tell you the turn status
+//   hubot [spiller] er ute - Tell hubot a player has left/lost the game
+//   hubot jeg er ute - Tell hubot you have left/lost the game
+//   hubot civ add [player list] - Add a space separated list of usernames as players
+//   hubot civ clear - Reset hubot's memory for Civilization
 
 module.exports = robot => {
-    robot.respond(/ferdig/i, res => {
-        playersRemaining--
-        if (playersRemaining > 0) {
-            res.reply(`Supert. Da venter vi bare på ${playersRemaining} spillere.`)
-        } else {
-            playersRemaining = playersMax
-            res.reply('Hurra! Da er vi klar for neste tur!')
+
+    let players = robot.brain.get('players')
+
+    if (!players) {
+        players = {}
+        robot.brain.set('players', players)
+    }
+
+    const playersRemaining = () => {
+        return Object.keys(players).filter(player => {
+            return !players[player].done
+        })
+    }
+
+    const playerList = () => {
+        return Object.keys(players).map(player => {
+            return player
+        })
+    }
+
+    const nextTurn = () => {
+        for (let player in players) {
+            players[player].done = false
         }
+        robot.brain.set('players', players)
+    }
+
+    const listify = array => {
+        return array.map(item => {
+            return '@' + item
+        }).join(', ')
+    }
+
+    const stripName = name => {
+        if (name[0] === '@')
+            name = name.slice(1, name.length)
+        return name
+    }
+
+    // hubot [spiller] er ferdig
+    robot.respond(/(.*)ferdig/i, res => {
+        let player
+        let modifiers = []
+        let modifier = res.match[1]
+
+        if (modifier) {
+            modifiers = modifier.trim().split(' ')
+            console.log(modifiers)
+            player = modifiers[0]
+            player = stripName(player)
+            if (player === 'jeg')
+                player = res.message.user.name
+        } else {
+            player = res.message.user.name
+        }
+
+        if (modifier && modifiers && modifiers[modifiers.length - 1] === 'ikke') {
+
+            players[player].done = false
+            robot.brain.set('players', players)
+
+            res.reply(`Ok. Da venter vi på ${playersRemaining().length} spillere.`)
+
+        } else {
+
+            players[player].done = true
+            robot.brain.set('players', players)
+
+            if (playersRemaining().length > 0) {
+                res.reply(`Supert. Da venter vi bare på ${playersRemaining().length} spillere.`)
+            } else {
+                nextTurn()
+                res.send('@channel: Hurra! Da er vi klar for neste tur!')
+            }
+        }
+
     })
 
+    // hubot next turn
+    robot.respond(/next turn/i, res => {
+        nextTurn()
+        res.reply('Hurra! Da er vi visst klare for neste tur!')
+    })
+
+    // hubot status
     robot.respond(/status/i, res => {
-        res.reply(`Vi venter på ${playersRemaining} spillere.`)
+        if (playerList().length == 0)
+            return res.send('Jeg mangler spillere. Legg til noen, da vel.')
+
+        res.send(`${playerList().length} spillere er fortsatt med.`)
+        res.send(`Vi venter på ${playersRemaining().length} spillere denne turen.`)
+        res.send(`Disse er ikke ferdig: ${listify(playersRemaining())}`)
     })
 
+    // hubot [spiller] er ute
     robot.respond(/(.*) er ute/i, res => {
-        playersMax--
         let player = res.match[1]
-        res.reply(`Historien vil bevare ${player}s minne, og ære deres kamp.`)
-        res.reply(`Da er det bare ${playersMax} spillere igjen.`)
+        player = stripName(player)
+        if (player === 'jeg')
+            player = res.message.user.name
+
+        delete players[player]
+        robot.brain.set('players', players)
+
+        res.send(`Historien vil bevare ${player}s minne, og ære deres kamp!`)
+        res.send(`Da er det bare ${playerList().length} spillere igjen.`)
     })
 
-    robot.respond(/reset civ/i, res => {
-        playersMax = 8
-        playersRemaining = playersMax
+    // hubot civ add [player list]
+    robot.respond(/civ add (.*)/i, res => {
+        let playersString = res.match[1]
+        for (let player of playersString.trim().split(' ')) {
+            players[player] = players[player] || {
+                done: false
+            }
+        }
+        robot.brain.set('players', players)
+
+        res.reply(`Ok, da har vi følgende spillere: ${listify(playerList())}`)
+    })
+
+    // hubot civ clear
+    robot.respond(/civ clear/i, res => {
+        players = {}
+        robot.brain.set('players', players)
+
         res.reply('BZZT! ...øh... Ok, hvor var vi igjen?')
     })
 }
