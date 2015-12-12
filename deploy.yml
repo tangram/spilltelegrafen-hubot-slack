@@ -1,0 +1,71 @@
+---
+
+- name: Deploy Hubot to Amazon EC2
+  hosts: all
+  sudo: true
+  sudo_user: root
+  remote_user: ubuntu
+
+  vars:
+    - app_name: spilltelegrafen-hubot-slack
+    - app_path: /home/ubuntu/{{ app_name }}
+
+  tasks:
+    - name: Ensure locales are present
+      locale_gen: name={{ item }} state=present
+      with_items:
+        - en_US.UTF-8
+        - nb_NO.UTF-8
+      tags:
+        - base
+
+    - name: Ensure packages are updated and upgraded
+      apt: upgrade=yes update_cache=yes
+      tags:
+        - base
+
+    - name: Add node repo
+      shell: curl -sL https://deb.nodesource.com/setup_4.x | sudo -E bash -
+             creates=/etc/apt/sources.list.d/nodesource.list
+      tags:
+        - base
+
+    - name: Install base packages
+      apt: name={{ item }} update_cache=yes
+      with_items:
+        - nodejs
+        - supervisor
+      tags:
+        - base
+
+    - name: Copy this repo
+      synchronize: src=.
+                   dest={{ app_path }}
+      sudo: no
+      notify:
+        - Restart supervisor
+      tags:
+        - sync
+
+    - name: Install npm packages
+      npm: path={{ app_path }}
+      sudo: no
+      tags:
+        - node
+
+    - name: Create supervisor config file
+      template: src=supervisor.conf
+                dest=/etc/supervisor/conf.d/{{ app_name }}.conf
+      notify:
+        - Restart supervisor
+      tags:
+        - supervisor
+
+    - name: Reread and update supervisor config files
+      shell: supervisorctl reread && supervisorctl update
+      tags:
+        - supervisor
+
+  handlers:
+    - name: Restart supervisor
+      shell: supervisorctl restart all
