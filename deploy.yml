@@ -35,6 +35,7 @@
       with_items:
         - nodejs
         - supervisor
+        - redis-server
       tags:
         - base
 
