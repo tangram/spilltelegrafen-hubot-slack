@@ -7,7 +7,6 @@ module.exports = robot => {
         if (playersRemaining > 0) {
             res.reply(`Supert. Da venter vi bare på ${playersRemaining} spillere.`)
         } else {
-            playersRemaining = playersMax
             res.reply('Hurra! Da er vi klar for neste tur!')
         }
     })
@@ -27,5 +26,10 @@ module.exports = robot => {
         playersMax = 8
         playersRemaining = playersMax
         res.reply('BZZT! ...øh... Ok, hvor var vi igjen?')
+    })
+
+    robot.respond(/new turn/i, res => {
+        playersRemaining = playersMax
+        res.reply(`Ny tur er startet!`)
     })
 }
