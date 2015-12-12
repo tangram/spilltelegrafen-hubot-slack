@@ -1,8 +1,6 @@
-# Spilltelegrafen Slack assistant
+# Hubot Slack assistant for Spilltelegrafen
 
-Hubot Slack assistant for Spilltelegrafen.
-
-Add new scripts to `src/`. Add their name to `hubot-scripts.js`.
+Add new scripts to `src/`. Add their name to `hubot-scripts.js`. Send a pull request.
 
 ## Prerequisites
 
