@@ -6,11 +6,21 @@ Add new scripts to `src/`. Add their name to `hubot-scripts.js`. Send a pull req
 
 You need Node.js and npm to build scripts and Ansible for deployment.
 
+## Setup
+
+Install requirements with
+
+    $ npm install
+
 ## Build
 
 Some scripts may be written in ES2015 syntax. To build them:
 
     $ gulp build
+
+## Manual testing
+
+    $ ./bin/hubot
 
 ## Deploy
 
