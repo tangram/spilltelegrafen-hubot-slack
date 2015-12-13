@@ -29,9 +29,7 @@ module.exports = robot => {
     }
 
     const playerList = () => {
-        return Object.keys(players).map(player => {
-            return player
-        })
+        return Object.keys(players)
     }
 
     const nextTurn = () => {
@@ -61,7 +59,6 @@ module.exports = robot => {
 
         if (modifier) {
             modifiers = modifier.trim().split(' ')
-            console.log(modifiers)
             player = modifiers[0]
             player = stripName(player)
             if (player === 'jeg')
@@ -70,12 +67,16 @@ module.exports = robot => {
             player = res.message.user.name
         }
 
-        if (modifier && modifiers && modifiers[modifiers.length - 1] === 'ikke') {
+        if (modifier &&
+            modifiers &&
+            modifiers[modifiers.length - 1] === 'ikke') {
 
             players[player].done = false
             robot.brain.set('players', players)
 
-            res.reply(`Ok. Da venter vi på ${playersRemaining().length} spillere.`)
+            let remaining = playersRemaining().length
+            let unit = (remaining == 1) ? 'spiller' : 'spillere'
+            res.reply(`Ok. Da venter vi på ${remaining} ${unit}.`)
 
         } else {
 
@@ -83,7 +84,9 @@ module.exports = robot => {
             robot.brain.set('players', players)
 
             if (playersRemaining().length > 0) {
-                res.reply(`Supert. Da venter vi bare på ${playersRemaining().length} spillere.`)
+                let remaining = playersRemaining().length
+                let unit = (remaining == 1) ? 'spiller' : 'spillere'
+                res.reply(`Supert. Da venter vi bare på ${remaining} ${unit}.`)
             } else {
                 nextTurn()
                 res.send('@channel: Hurra! Da er vi klar for neste tur!')
@@ -103,8 +106,11 @@ module.exports = robot => {
         if (playerList().length == 0)
             return res.send('Jeg mangler spillere. Legg til noen, da vel.')
 
-        res.send(`${playerList().length} spillere er fortsatt med.`)
-        res.send(`Vi venter på ${playersRemaining().length} spillere denne turen.`)
+        let remaining = playersRemaining().length
+        let unit = (remaining == 1) ? 'spiller' : 'spillere'
+
+        res.send(`${playerList().length} spillere kjemper om verdensherredømme.`)
+        res.send(`Vi venter på ${remaining} ${unit} denne turen.`)
         res.send(`Disse er ikke ferdig: ${listify(playersRemaining())}`)
     })
 
@@ -119,7 +125,7 @@ module.exports = robot => {
         robot.brain.set('players', players)
 
         res.send(`Historien vil bevare ${player}s minne, og ære deres kamp!`)
-        res.send(`Da er det bare ${playerList().length} spillere igjen.`)
+        res.send(`Da er det ${playerList().length} spillere igjen.`)
     })
 
     // hubot civ add [player list]
