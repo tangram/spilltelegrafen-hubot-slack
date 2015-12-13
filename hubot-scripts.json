@@ -1,4 +1,9 @@
 [
-    "redis-brain.coffee",
+    "applause.coffee",
+    "beerme.coffee",
+    "bees.coffee",
+    "dealwithit.coffee",
+    "rimshot.coffee",
+
     "civtelegrafen"
 ]
