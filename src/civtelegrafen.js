@@ -15,12 +15,7 @@
 
 module.exports = robot => {
 
-    let players = robot.brain.get('players')
-
-    if (!players) {
-        players = {}
-        robot.brain.set('players', players)
-    }
+    let players = {}
 
     const playersRemaining = () => {
         return Object.keys(players).filter(player => {
@@ -36,7 +31,6 @@ module.exports = robot => {
         for (let player in players) {
             players[player].done = false
         }
-        robot.brain.set('players', players)
     }
 
     const listify = array => {
@@ -72,7 +66,6 @@ module.exports = robot => {
             modifiers[modifiers.length - 1] === 'ikke') {
 
             players[player].done = false
-            robot.brain.set('players', players)
 
             let remaining = playersRemaining().length
             let unit = (remaining == 1) ? 'spiller' : 'spillere'
@@ -81,7 +74,6 @@ module.exports = robot => {
         } else {
 
             players[player].done = true
-            robot.brain.set('players', players)
 
             if (playersRemaining().length > 0) {
                 let remaining = playersRemaining().length
@@ -96,7 +88,7 @@ module.exports = robot => {
     })
 
     // hubot next turn
-    robot.respond(/next turn/i, res => {
+    robot.respond(/ny tur/i, res => {
         nextTurn()
         res.reply('Hurra! Da er vi visst klare for neste tur!')
     })
@@ -122,7 +114,6 @@ module.exports = robot => {
             player = res.message.user.name
 
         delete players[player]
-        robot.brain.set('players', players)
 
         res.send(`Historien vil bevare ${player}s minne, og ære deres kamp!`)
         res.send(`Da er det ${playerList().length} spillere igjen.`)
@@ -136,7 +127,6 @@ module.exports = robot => {
                 done: false
             }
         }
-        robot.brain.set('players', players)
 
         res.reply(`Ok, da har vi følgende spillere: ${listify(playerList())}`)
     })
@@ -144,7 +134,6 @@ module.exports = robot => {
     // hubot civ clear
     robot.respond(/civ clear/i, res => {
         players = {}
-        robot.brain.set('players', players)
 
         res.reply('BZZT! ...øh... Ok, hvor var vi igjen?')
     })
